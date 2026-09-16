@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pack Emprendedor — Kit de Herramientas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<!-- Librerías: código de barras y QR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.3/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#0F1115;
+    --panel:#181B21;
+    --panel-2:#1E222A;
+    --line:#2A2F38;
+    --text:#EDECE6;
+    --text-dim:#9CA3AF;
+    --accent:#E3A23D;
+    --green:#5FAE6E;
+    --amber:#E3A23D;
+    --red:#D06A5E;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:'Inter',sans-serif;min-height:100vh;
+  }
+  .app{max-width:560px;margin:0 auto;padding:32px 20px 90px;}
+
+  .screen{display:none;}
+  .screen.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  h1{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:24px;margin:0 0 6px;}
+  h2{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:20px;margin:0 0 6px;}
+  .subtitle{color:var(--text-dim);font-size:14px;margin:0 0 24px;line-height:1.5;}
+  .step-label{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);
+    letter-spacing:.03em;margin-bottom:8px;
+  }
+
+  .btn-back{
+    background:none;border:none;color:var(--text-dim);font-size:13px;cursor:pointer;
+    margin-bottom:18px;padding:0;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:4px;
+  }
+  .btn-back:hover{color:var(--text);}
+
+  .btn-primary{
+    width:100%;background:var(--accent);color:#171207;border:none;border-radius:6px;
+    padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+  .btn-secondary{
+    width:100%;background:none;border:1px solid var(--line);color:var(--text);
+    border-radius:6px;padding:12px;font-size:14px;cursor:pointer;margin-top:10px;
+  }
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;color:var(--text-dim);margin-bottom:6px;}
+  .field label .opt{color:#6B7280;font-style:italic;}
+  .field input, .field textarea, .field select{
+    width:100%;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    color:var(--text);padding:11px 12px;font-size:15px;font-family:'Inter',sans-serif;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{outline:none;border-color:var(--accent);}
+  .field textarea{resize:vertical;min-height:70px;}
+  .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%239CA3AF' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+
+  /* ---------- HOME: grid de herramientas ---------- */
+  .tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px;}
+  .tool-card{
+    background:var(--panel);border:2px solid var(--line);border-radius:12px;
+    padding:22px 14px;text-align:center;cursor:pointer;transition:.15s;
+  }
+  .tool-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+  a.tool-card{color:inherit;text-decoration:none;display:block;}
+  .tool-card .emoji{font-size:30px;display:block;margin-bottom:10px;}
+  .tool-card .label{font-weight:700;font-size:13.5px;line-height:1.3;}
+
+  /* ---------- tabs (código de barras / QR) ---------- */
+  .tabs{display:flex;gap:8px;margin-bottom:20px;}
+  .tab-btn{
+    flex:1;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    color:var(--text-dim);padding:11px;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .tab-btn.active{border-color:var(--accent);color:var(--accent);background:var(--panel-2);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* ---------- resultado genérico (calculadora, códigos) ---------- */
+  .result-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:18px;margin-top:18px;
+  }
+  .result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .result-row:last-child{border-bottom:none;}
+  .result-row .k{color:var(--text-dim);}
+  .result-row .v{font-weight:700;font-family:'JetBrains Mono',monospace;}
+  .result-row .v.good{color:var(--green);}
+  .result-row .v.warn{color:var(--amber);}
+  .result-row .v.bad{color:var(--red);}
+  .result-hint{font-size:12.5px;color:var(--text-dim);margin-top:10px;line-height:1.5;}
+
+  #codigo-output, #qr-output{
+    background:#fff;border-radius:10px;padding:22px;margin-top:18px;text-align:center;
+  }
+  #codigo-output svg{width:100%;max-width:320px;height:auto;}
+  #qr-output-inner{display:inline-block;}
+  #qr-output-inner img, #qr-output-inner canvas{max-width:220px;width:100%;height:auto;}
+
+  .map-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--line);margin-top:16px;}
+  .map-wrap iframe{width:100%;height:420px;border:0;display:block;}
+  .legend{display:flex;gap:16px;margin-top:14px;font-size:13px;color:var(--text-dim);flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block;}
+
+  .wa-preview{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:16px;
+    word-break:break-all;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);
+  }
+
+  .action-buttons{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .action-buttons .btn-primary, .action-buttons .btn-secondary{margin-top:0;}
+  .hint{font-size:12px;color:var(--text-dim);text-align:center;margin-top:14px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= HOME ================= -->
+  <div class="screen active" id="screen-home">
+    <div class="step-label">PACK EMPRENDEDOR</div>
+    <h1>Kit de herramientas para tu negocio</h1>
+    <p class="subtitle">Elige la herramienta que necesitas. Todo funciona directo en tu navegador, sin instalar nada.</p>
+    <div class="tool-grid">
+      <div class="tool-card" onclick="goTo('t2-calc')">
+        <span class="emoji">📊</span><span class="label">Calculadora de<br>rentabilidad</span>
+      </div>
+      <a class="tool-card" href="https://emprendedor-pe.github.io/ROTULOS/" target="_blank" rel="noopener">
+        <span class="emoji">🏷️</span><span class="label">Rótulos de<br>mis negocios</span>
+      </a>
+      <div class="tool-card" onclick="goTo('t5-whatsapp')">
+        <span class="emoji">💬</span><span class="label">Enlace directo<br>de WhatsApp</span>
+      </div>
+      <div class="tool-card" onclick="goTo('t3-codigos')">
+        <span class="emoji">🔳</span><span class="label">Código de barras<br>y QR</span>
+      </div>
+      <div class="tool-card" onclick="goTo('t4-zonas')">
+        <span class="emoji">🗺️</span><span class="label">Zonas peligrosas<br>de reparto (Lima)</span>
+      </div>
+      <a class="tool-card" href="https://emprendedor-pe.github.io/emergencias-per-/" target="_blank" rel="noopener">
+        <span class="emoji">🚨</span><span class="label">Números de<br>emergencia</span>
+      </a>
+      <a class="tool-card" href="PENDIENTE-PASAME-EL-LINK" target="_blank" rel="noopener">
+        <span class="emoji">🎧</span><span class="label">Sonidos para<br>concentrarse</span>
+      </a>
+      <a class="tool-card" href="https://emprendedor-pe.github.io/velocimetro-pierre/" target="_blank" rel="noopener">
+        <span class="emoji">🏍️</span><span class="label">Velocímetro</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ================= HERRAMIENTA 2: CALCULADORA DE RENTABILIDAD ================= -->
+  <div class="screen" id="t2-calc">
+    <button class="btn-back" onclick="goTo('screen-home')">&larr; Menú principal</button>
+    <div class="step-label">CALCULADORA</div>
+    <h2>Rentabilidad y ganancia real</h2>
+    <p class="subtitle">Descubre cuánto ganas de verdad por producto o servicio, no solo lo que parece a simple vista.</p>
+    <form id="form-calc">
+      <div class="field">
+        <label>¿A qué se dedica tu negocio?</label>
+        <select id="calc-rubro">
+          <option value="reventa">Reventa / Comercio</option>
+          <option value="manufactura">Manufactura / Confección</option>
+          <option value="servicios">Servicios</option>
+          <option value="importacion">Importación</option>
+        </select>
+      </div>
+      <div class="field"><label>Precio de venta (S/)</label><input type="number" step="0.10" id="calc-precio" required placeholder="Ej: 89.90"></div>
+      <div class="field"><label id="label-costo-directo">Costo directo por unidad (S/)</label><input type="number" step="0.10" id="calc-costo" required placeholder="Ej: 35.00"></div>
+
+      <div class="field rubro-field" data-rubro="importacion">
+        <label>Costo de flete/aduana por unidad (S/) <span class="opt">(opcional)</span></label>
+        <input type="number" step="0.10" id="calc-flete">
+      </div>
+      <div class="field rubro-field" data-rubro="servicios">
+        <label>Horas invertidas por servicio <span class="opt">(opcional)</span></label>
+        <input type="number" step="0.5" id="calc-horas">
+      </div>
+
+      <div class="field"><label>Comisión de plataforma o marketplace (%) <span class="opt">(opcional)</span></label><input type="number" step="0.1" id="calc-comision" placeholder="Ej: 15"></div>
+      <div class="field"><label>Costo de envío por unidad (S/) <span class="opt">(opcional)</span></label><input type="number" step="0.10" id="calc-envio"></div>
+      <div class="field"><label>Cantidad vendida al mes <span class="opt">(opcional, para ver ganancia total)</span></label><input type="number" step="1" id="calc-cantidad"></div>
+      <div class="field"><label>Gastos fijos mensuales (S/) <span class="opt">(alquiler, sueldos, luz, etc. — opcional)</span></label><input type="number" step="1" id="calc-gastos"></div>
+
+      <button type="submit" class="btn-primary">Calcular</button>
+    </form>
+    <div class="result-box" id="calc-result" style="display:none;"></div>
+  </div>
+
+  <!-- ================= HERRAMIENTA 3: CÓDIGO DE BARRAS Y QR ================= -->
+  <div class="screen" id="t3-codigos">
+    <button class="btn-back" onclick="goTo('screen-home')">&larr; Menú principal</button>
+    <div class="step-label">CÓDIGOS</div>
+    <h2>Código de barras y QR</h2>
+    <p class="subtitle">Genera y descarga cualquiera de los dos, sin instalar nada.</p>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-btn-barcode" onclick="switchTab('barcode')">Código de barras</button>
+      <button class="tab-btn" id="tab-btn-qr" onclick="switchTab('qr')">Código QR</button>
+    </div>
+
+    <div class="tab-content active" id="tab-barcode">
+      <form id="form-barcode">
+        <div class="field"><label>Código o número</label><input type="text" id="barcode-input" required placeholder="Ej: 000123 o SKU-045"></div>
+        <button type="submit" class="btn-primary">Generar código de barras</button>
+      </form>
+      <div id="codigo-output" style="display:none;"><svg id="barcode-svg"></svg></div>
+      <button class="btn-secondary" id="btn-download-barcode" style="display:none;" onclick="descargarBarcode()">⬇️ Descargar imagen</button>
+    </div>
+
+    <div class="tab-content" id="tab-qr">
+      <form id="form-qr">
+        <div class="field"><label>Enlace, texto o número</label><input type="text" id="qr-input" required placeholder="Ej: https://wa.me/51999999999"></div>
+        <button type="submit" class="btn-primary">Generar código QR</button>
+      </form>
+      <div id="qr-output" style="display:none;"><div id="qr-output-inner"></div></div>
+      <button class="btn-secondary" id="btn-download-qr" style="display:none;" onclick="descargarQR()">⬇️ Descargar imagen</button>
+    </div>
+  </div>
+
+  <!-- ================= HERRAMIENTA 4: ZONAS PELIGROSAS DE REPARTO ================= -->
+  <div class="screen" id="t4-zonas">
+    <button class="btn-back" onclick="goTo('screen-home')">&larr; Menú principal</button>
+    <div class="step-label">LOGÍSTICA</div>
+    <h2>Zonas peligrosas de reparto en Lima</h2>
+    <p class="subtitle">Mapa de referencia con las zonas donde los couriers reportan mayor riesgo para hacer entregas.</p>
+    <div class="map-wrap">
+      <iframe src="https://www.google.com/maps/d/embed?mid=1iu7wPtmcucOsooBa-WOmCo917Yw_lBkb&ll=-11.959144533528804,-77.08858986468258&z=13" loading="lazy"></iframe>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:#D06A5E;"></span>Riesgo alto — evitar entrega directa</span>
+      <span><span class="dot" style="background:#2b2b2b;"></span>Zona restringida por el courier</span>
+    </div>
+    <p class="hint">Mapa de referencia según la experiencia de couriers que operan en Lima. No reemplaza tu propio criterio ni el de tu repartidor — verifica siempre antes de despachar a una zona que no conoces.</p>
+    <a href="https://www.google.com/maps/d/u/0/viewer?mid=1iu7wPtmcucOsooBa-WOmCo917Yw_lBkb&femb=1&ll=-11.959144533528804%2C-77.08858986468258&z=13" target="_blank" rel="noopener" style="text-decoration:none;">
+      <button class="btn-secondary">Ver mapa completo en Google Maps</button>
+    </a>
+  </div>
+
+  <!-- ================= HERRAMIENTA 5: ENLACE DE WHATSAPP ================= -->
+  <div class="screen" id="t5-whatsapp">
+    <button class="btn-back" onclick="goTo('screen-home')">&larr; Menú principal</button>
+    <div class="step-label">WHATSAPP</div>
+    <h2>Generador de enlace de WhatsApp</h2>
+    <p class="subtitle">Crea un link que abre un chat directo con un mensaje ya escrito.</p>
+    <form id="form-whatsapp">
+      <div class="field"><label>Número de celular (con código de país)</label><input type="text" id="wa-numero" required placeholder="Ej: 51987654321"></div>
+      <div class="field"><label>Mensaje pre-armado <span class="opt">(opcional)</span></label><textarea id="wa-mensaje" placeholder="Ej: Hola, quiero hacer un pedido"></textarea></div>
+      <button type="submit" class="btn-primary">Generar enlace</button>
+    </form>
+    <div id="wa-result" style="display:none;">
+      <div class="wa-preview" id="wa-link-text"></div>
+      <div class="action-buttons">
+        <button class="btn-secondary" onclick="copiarEnlaceWA()">📋 Copiar enlace</button>
+        <a id="wa-open-link" href="#" target="_blank" rel="noopener" style="text-decoration:none;"><button class="btn-primary" style="width:100%;">Abrir WhatsApp</button></a>
+      </div>
+      <div id="qr-output-wa" style="display:none;"><div id="qr-output-wa-inner"></div></div>
+      <button class="btn-secondary" onclick="generarQRWhatsapp()">🔳 Generar QR de este enlace</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   NAVEGACIÓN GENERAL
+   ============================================================ */
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============================================================
+   HERRAMIENTA 2: CALCULADORA DE RENTABILIDAD
+   ============================================================ */
+const rubroLabels = {
+  reventa: "Costo de compra por unidad (S/)",
+  manufactura: "Costo de materiales + mano de obra por unidad (S/)",
+  servicios: "Costo directo del servicio (S/)",
+  importacion: "Costo del producto puesto en Perú, sin flete/aduana (S/)"
+};
+
+document.getElementById('calc-rubro').addEventListener('change', function(){
+  const rubro = this.value;
+  document.getElementById('label-costo-directo').textContent = rubroLabels[rubro];
+  document.querySelectorAll('.rubro-field').forEach(f => {
+    f.style.display = (f.dataset.rubro === rubro) ? 'block' : 'none';
+  });
+});
+// Disparar una vez al cargar para dejar el label correcto
+document.getElementById('calc-rubro').dispatchEvent(new Event('change'));
+
+document.getElementById('form-calc').addEventListener('submit', function(e){
+  e.preventDefault();
+  const rubro = document.getElementById('calc-rubro').value;
+  const precio = parseFloat(document.getElementById('calc-precio').value) || 0;
+  const costoDirecto = parseFloat(document.getElementById('calc-costo').value) || 0;
+  const flete = parseFloat(document.getElementById('calc-flete').value) || 0;
+  const horas = parseFloat(document.getElementById('calc-horas').value) || 0;
+  const comisionPct = parseFloat(document.getElementById('calc-comision').value) || 0;
+  const envio = parseFloat(document.getElementById('calc-envio').value) || 0;
+  const cantidad = parseFloat(document.getElementById('calc-cantidad').value) || 0;
+  const gastosFijos = parseFloat(document.getElementById('calc-gastos').value) || 0;
+
+  const comisionMonto = precio * (comisionPct/100);
+  const extraImportacion = rubro === 'importacion' ? flete : 0;
+  const costoTotalUnidad = costoDirecto + comisionMonto + envio + extraImportacion;
+  const gananciaUnidad = precio - costoTotalUnidad;
+  const margenPct = precio > 0 ? (gananciaUnidad/precio*100) : 0;
+
+  let claseMargen = 'good';
+  if(margenPct < 10) claseMargen = 'bad';
+  else if(margenPct < 20) claseMargen = 'warn';
+
+  let filasHTML = `
+    <div class="result-row"><span class="k">Costo total por unidad</span><span class="v">S/ ${costoTotalUnidad.toFixed(2)}</span></div>
+    <div class="result-row"><span class="k">Ganancia neta por unidad</span><span class="v ${gananciaUnidad<0?'bad':'good'}">S/ ${gananciaUnidad.toFixed(2)}</span></div>
+    <div class="result-row"><span class="k">Margen de ganancia</span><span class="v ${claseMargen}">${margenPct.toFixed(1)}%</span></div>
+  `;
+
+  if(cantidad > 0){
+    const gananciaTotalMes = (gananciaUnidad * cantidad) - gastosFijos;
+    filasHTML += `<div class="result-row"><span class="k">Ganancia real del mes (con ${cantidad} vendidas)</span><span class="v ${gananciaTotalMes<0?'bad':'good'}">S/ ${gananciaTotalMes.toFixed(2)}</span></div>`;
+  }
+
+  if(gastosFijos > 0 && gananciaUnidad > 0){
+    const puntoEquilibrio = Math.ceil(gastosFijos / gananciaUnidad);
+    filasHTML += `<div class="result-row"><span class="k">Unidades para cubrir tus gastos fijos</span><span class="v">${puntoEquilibrio}</span></div>`;
+  }
+
+  if(rubro === 'servicios' && horas > 0){
+    const gananciaPorHora = gananciaUnidad / horas;
+    filasHTML += `<div class="result-row"><span class="k">Ganancia real por hora trabajada</span><span class="v ${gananciaPorHora<0?'bad':'good'}">S/ ${gananciaPorHora.toFixed(2)}</span></div>`;
+  }
+
+  let hint = '';
+  if(margenPct < 10) hint = 'Tu margen está muy ajustado. Revisa si puedes subir el precio, bajar el costo directo, o negociar la comisión de la plataforma.';
+  else if(margenPct < 20) hint = 'Tu margen es aceptable pero justo. Un gasto inesperado (devoluciones, reclamos) puede dejarte sin ganancia real.';
+  else hint = 'Tu margen luce saludable. Aun así, recuerda restar tus gastos fijos del mes para saber tu ganancia real, no solo la de cada venta.';
+
+  document.getElementById('calc-result').innerHTML = filasHTML + `<div class="result-hint">${hint}</div>`;
+  document.getElementById('calc-result').style.display = 'block';
+});
+
+/* ============================================================
+   HERRAMIENTA 3: CÓDIGO DE BARRAS Y QR
+   ============================================================ */
+function switchTab(tab){
+  document.getElementById('tab-btn-barcode').classList.toggle('active', tab==='barcode');
+  document.getElementById('tab-btn-qr').classList.toggle('active', tab==='qr');
+  document.getElementById('tab-barcode').classList.toggle('active', tab==='barcode');
+  document.getElementById('tab-qr').classList.toggle('active', tab==='qr');
+}
+
+document.getElementById('form-barcode').addEventListener('submit', function(e){
+  e.preventDefault();
+  const valor = document.getElementById('barcode-input').value.trim();
+  try{
+    JsBarcode("#barcode-svg", valor, {
+      format:"CODE128", width:2, height:70, displayValue:true, fontSize:16,
+      margin:10, background:"#ffffff", lineColor:"#000000"
+    });
+    document.getElementById('codigo-output').style.display = 'block';
+    document.getElementById('btn-download-barcode').style.display = 'block';
+  }catch(err){
+    alert('No se pudo generar el código con ese texto. Prueba con otro valor.');
+  }
+});
+
+function descargarBarcode(){
+  const svg = document.getElementById('barcode-svg');
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const img = new Image();
+  const svgBlob = new Blob([svgData], {type:'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(svgBlob);
+  img.onload = function(){
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * 3;
+    canvas.height = img.height * 3;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.download = 'codigo-barras-' + Date.now() + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+  img.src = url;
+}
+
+document.getElementById('form-qr').addEventListener('submit', function(e){
+  e.preventDefault();
+  const valor = document.getElementById('qr-input').value.trim();
+  const contenedor = document.getElementById('qr-output-inner');
+  contenedor.innerHTML = '';
+  new QRCode(contenedor, { text: valor, width:220, height:220, colorDark:"#000000", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.H });
+  document.getElementById('qr-output').style.display = 'block';
+  document.getElementById('btn-download-qr').style.display = 'block';
+});
+
+function descargarQR(){
+  setTimeout(() => {
+    const img = document.querySelector('#qr-output-inner img');
+    const canvas = document.querySelector('#qr-output-inner canvas');
+    const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
+    if(!src){ alert('Genera el código QR primero.'); return; }
+    const a = document.createElement('a');
+    a.download = 'codigo-qr-' + Date.now() + '.png';
+    a.href = src;
+    a.click();
+  }, 150);
+}
+
+/* ============================================================
+   HERRAMIENTA 5: ENLACE DE WHATSAPP
+   ============================================================ */
+let waLinkActual = '';
+
+document.getElementById('form-whatsapp').addEventListener('submit', function(e){
+  e.preventDefault();
+  const numero = document.getElementById('wa-numero').value.replace(/[^0-9]/g,'');
+  const mensaje = document.getElementById('wa-mensaje').value;
+  waLinkActual = `https://wa.me/${numero}` + (mensaje ? `?text=${encodeURIComponent(mensaje)}` : '');
+  document.getElementById('wa-link-text').textContent = waLinkActual;
+  document.getElementById('wa-open-link').href = waLinkActual;
+  document.getElementById('qr-output-wa').style.display = 'none';
+  document.getElementById('qr-output-wa-inner').innerHTML = '';
+  document.getElementById('wa-result').style.display = 'block';
+});
+
+function copiarEnlaceWA(){
+  navigator.clipboard.writeText(waLinkActual).then(() => {
+    alert('Enlace copiado');
+  });
+}
+
+function generarQRWhatsapp(){
+  if(!waLinkActual) return;
+  const contenedor = document.getElementById('qr-output-wa-inner');
+  contenedor.innerHTML = '';
+  new QRCode(contenedor, { text: waLinkActual, width:200, height:200, colorDark:"#000000", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.H });
+  document.getElementById('qr-output-wa').style.display = 'block';
+}
+</script>
+</body>
+</html>
